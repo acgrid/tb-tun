@@ -7,8 +7,11 @@ I compiled the source file on kernel 2.6.32-trunk-686 with gcc version 4.4.3 201
 You can download the binary file tb_userspace directly.
 ==Config and Example==
 ---- 
+
 You should first know what is 6to4 tunnel(or tunnelbroker). 6to4 encapsulates IPv6 package in IPv4 package. To use 6to4, A relay server and a public IPv4 address for the client is necessary. By default IPv4 address 192.88.99.1 is assigned for relay server and anycasted by ISP. Thus the default IPv6 addressfor the client must be 2002:__IPv4_addr__::__IPv4_addr__. e.g. 2002:0B0B:0B0B::0B0B:0B0B for client IPv4 address 11.11.11.11. You can get your IPv6 address and IPv4 address of the relay server from the tunnelbroker provider or use the default one.
+
 ---- 
+
 The example below shows how to config a general 6to4 tunnel with client IPv4 address 11.11.11.11
 
 #setsid ./tb_userspace tb 192.88.99.1 > /dev/null
