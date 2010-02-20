@@ -13,6 +13,8 @@ You should first know what is 6to4 tunnel(or tunnelbroker). 6to4 encapsulates IP
 
 ---- 
 
+*The host system should support TUN/TAP device.*
+
 The example below shows how to config a general 6to4 tunnel with client IPv4 address 11.11.11.11
 
 *#setsid ./tb_userspace tb 192.88.99.1 > /dev/null*
