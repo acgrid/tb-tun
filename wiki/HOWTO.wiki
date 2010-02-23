@@ -2,7 +2,7 @@
 ===Compile===
 Download the sourcefile *tb_userspace.c* and compile it by gcc
 
-*#gcc userspace.c -l pthread -o tb_userspace*
+*# gcc tb_userspace.c -l pthread -o tb_userspace*
 ===Binary(Recommended)===
 I compiled the source file on kernel *2.6.32-trunk-686* with gcc version *4.4.3 20100108*, and the binary file can work well on kernel *2.6.18-128.2.1.el5.028stab064.7*
 You can download the binary file *tb_userspace* directly.
@@ -17,26 +17,26 @@ You should first know what is 6to4 tunnel(or tunnelbroker). 6to4 encapsulates IP
 
 The example below shows how to config a general 6to4 tunnel with client IPv4 address 11.11.11.11
 
-*#setsid ./tb_userspace tb 192.88.99.1 > /dev/null*
+*# setsid ./tb_userspace tb 192.88.99.1 > /dev/null*
 
-*#ifconfig tb up*
+*# ifconfig tb up*
 
-*#ifconfig tb inet6 add 2002:0B0B:0B0B::0B0B:0B0B/64*
+*# ifconfig tb inet6 add 2002:0B0B:0B0B::0B0B:0B0B/64*
 
-*#route -A inet6 add ::/0 dev tb*
+*# route -A inet6 add ::/0 dev tb*
 
 ./tb_userspace takes exactly 2 arguments: the name of device TUN(here is 'tb') and the IPv4 addr(192.88.99.1) of relay server. 
 
 If you are using a different relay server, just change the IPv4 and IPv6 address.
 The example below shows how to config a 6to4 tunnel with the relay server IPv4 address 209.51.161.14 and client IPv6 address 2001:470:1f06:794::2/64
 
-*#setsid ./tb_userspace tb 209.51.161.14 > /dev/null*
+*# setsid ./tb_userspace tb 209.51.161.14 > /dev/null*
 
-*#ifconfig tb up*
+*# ifconfig tb up*
 
-*#ifconfig tb inet6 add 2001:470:1f06:794::2/64*
+*# ifconfig tb inet6 add 2001:470:1f06:794::2/64*
 
-*#route -A inet6 add ::/0 dev tb*
+*# route -A inet6 add ::/0 dev tb*
 
 And now you can try to ping some IPv6-only hosts:
 
