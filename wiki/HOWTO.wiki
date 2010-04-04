@@ -23,9 +23,13 @@ The example below shows how to config a general 6to4 tunnel with client IPv4 add
 
 *# ifconfig tb inet6 add 2002:0B0B:0B0B::0B0B:0B0B/64*
 
+*# ifconfig tb mtu 1480*
+
 *# route -A inet6 add ::/0 dev tb*
 
 ./tb_userspace takes exactly 2 arguments: the name of device TUN(here is 'tb') and the IPv4 addr(192.88.99.1) of relay server. 
+
+By default the MTU of Ethernet is 1500. So the MTU of IPv6 tunnel should be 1480 by removing the 20 bytes IPv4 header. I didn't test other MTU values. But 1480 is recommended for it would neither cause IPv6 packet be trunked nor be too small for IPv6.
 
 If you are using a different relay server, just change the IPv4 and IPv6 address.
 The example below shows how to config a 6to4 tunnel with the relay server IPv4 address 209.51.161.14 and client IPv6 address 2001:470:1f06:794::2/64
@@ -35,6 +39,8 @@ The example below shows how to config a 6to4 tunnel with the relay server IPv4 a
 *# ifconfig tb up*
 
 *# ifconfig tb inet6 add 2001:470:1f06:794::2/64*
+
+*# ifconfig tb mtu 1480*
 
 *# route -A inet6 add ::/0 dev tb*
 
