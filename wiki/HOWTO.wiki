@@ -29,7 +29,7 @@ The example below shows how to config a general 6to4 tunnel with client IPv4 add
 
 ./tb_userspace takes exactly 2 arguments: the name of device TUN(here is 'tb') and the IPv4 addr(192.88.99.1) of relay server. 
 
-By default the MTU of Ethernet is 1500. So the MTU of IPv6 tunnel should be 1480 by removing the 20 bytes IPv4 header. I didn't test other MTU values. But 1480 is recommended for it would neither cause IPv6 packet be trunked nor be too small for IPv6.
+By default the MTU of Ethernet is 1500. So the MTU of IPv6 tunnel should be 1480 by removing the 20 bytes IPv4 header. To set a proper MTU that neither cause IPv6 packet be trunked nor be too small for IPv6, You'd better find the IPv4 MTU from you to your tunnel relay server by your self and set the IPv6 MTU by minus 20 bytes.
 
 If you are using a different relay server, just change the IPv4 and IPv6 address.
 The example below shows how to config a 6to4 tunnel with the relay server IPv4 address 209.51.161.14 and client IPv6 address 2001:470:1f06:794::2/64
