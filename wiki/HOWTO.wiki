@@ -4,7 +4,7 @@ Download the sourcefile *tb_userspace.c* and compile it by gcc
 
 *# gcc tb_userspace.c -l pthread -o tb_userspace*
 ===Binary(Recommended)===
-I compiled the source file on kernel *2.6.32-trunk-686* with gcc version *4.4.3 20100108*, and the binary file can work well on kernel *2.6.18-128.2.1.el5.028stab064.7*
+I compiled the source file on Debian 5.0 kernel *2.6.32-trunk-686* with gcc version *4.4.3 20100108*, and the binary file can work well on kernel *2.6.18-128.2.1.el5.028stab064.7*
 You can download the binary file *tb_userspace* directly.
 ==Config and Example==
 ---- 
