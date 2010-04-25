@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <net/if.h>
+#include <linux/if_ether.h>
 #include <linux/if_tun.h>
 #include <assert.h>
 #include <memory.h>
@@ -10,6 +11,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <netinet/in.h>
+
 
 struct Threadargs {
                 int sockv6;
@@ -84,7 +86,7 @@ void t2s_thread(void *t2sargs) {
 			printf("t2sTUN ERROR\r\n");
 			continue;
 		}
-		res = sendto(sockv6, &buftun[size_of_pi], ret, 0 ,&remoteaddr, sizeof(struct sockaddr));
+		res = sendto(sockv6, &buftun[size_of_pi], ret, 0 ,(struct sockaddr *)&remoteaddr, sizeof(struct sockaddr));
 		printf("t2s:%d %d\r\n", ret ,res);
 	}
 }
