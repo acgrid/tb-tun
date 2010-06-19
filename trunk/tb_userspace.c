@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <net/if.h>
+#include <arpa/inet.h>
 #include <linux/if_ether.h>
 #include <linux/if_tun.h>
 #include <assert.h>
@@ -11,6 +13,10 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <netinet/in.h>
+
+/* compile with 
+ * cc -l pthread -Wall -O2 -s -o tb_userspace tb_userspace.c
+ */
 
 struct Threadargs {
                 int sockv6;
@@ -102,9 +108,8 @@ void s2t_thread(void *s2targs) {
 }
 
 void t2s_thread(void *t2sargs) {
-	int sockv6, tun, ret, res, remote_ip, leniphead, tun_mode;
+	int sockv6, tun, ret, res, remote_ip, tun_mode;
 	unsigned char buftun[4096];
-	unsigned char tmp[4096];
 	sockv6 = (*(struct Threadargs *)t2sargs).sockv6;
         tun = (*(struct Threadargs *)t2sargs).tun;
 	remote_ip = (*(struct Threadargs *)t2sargs).remote_ip;
@@ -140,9 +145,9 @@ void t2s_thread(void *t2sargs) {
 
 int main(int argc, char  *argv[])
 {
-        int tun, rets2t, rett2s, remote_ip;
+        int tun, rets2t, rett2s;
+        in_addr_t remote_ip;
         char tun_name[IFNAMSIZ];
-        unsigned char buftun[4096];
 	if (argc!=5) {
 		printf("Useage:%s tun_name remote_ipv4 local_ipv4 mode\r\n",argv[0]);
 		return 1;
@@ -200,7 +205,7 @@ int main(int argc, char  *argv[])
 		return 1;
 	}
 	s2targs.tun_mode = tun_mode;
-        if (remote_ip < 0) {
+        if (remote_ip == INADDR_NONE) {
                 printf("Bad remote ipv4 address.\r\n");
                 return 1;
         }
