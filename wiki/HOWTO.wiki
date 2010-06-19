@@ -85,13 +85,3 @@ And now you can try to ping some IPv6-only hosts:
 *64 bytes from vx-in-x67.1e100.net: icmp_seq=1 ttl=55 time=43.0 ms*
 
 *....*
-
-*tb_userspace* try to meet the RFC standard. Our of security considerations it restricted the incoming packages. But if problems occurs, On the download page a patch named tb_light.patch is also provided. By applying the patch
-
-*# patch -p0 tb_userspace.c tb_light.patch -o tb_light.c*
-
-and compile it:
-
-*# gcc tb_light.c -l pthread -o tb_light*
-
-got tb_light, the useage is the same as tb_userspace. But it would simply send all outgoing package to the relay server and accept any data without checking the source address. *Not recommended to use this.*
