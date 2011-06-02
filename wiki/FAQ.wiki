@@ -9,3 +9,7 @@ Till now I only test the program on my computer and my VPS. If the host system i
 3.6to4 is IPv6 over IP, Could I use TB-TUN for IPv6 over PPPOE & etc.?
 
 Currently no. And I did not plan to study linux socket further. If you have any ideas, please share with me.
+
+4.I also need a userspace firewall.
+
+You may find [http://www.lucabert.de/myProgram/viewProgramDetail.php?lang=en&programName=ustun ustun] helpful. 
