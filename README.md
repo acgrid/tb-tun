@@ -12,7 +12,7 @@ Please read
 
 Update 2011.6.2
 
-Thanks to Luca Bertoncello, he wrote (ustun)[http://www.lucabert.de/myProgram/viewProgramDetail.php?lang=en&amp;programName=ustun], more powerful userspace tunnel program with firewall. Documentation can be found [here](http://www.lucabert.de/ipv6/index.php?lang=en).
+Thanks to Luca Bertoncello, he wrote [ustun](http://www.lucabert.de/myProgram/viewProgramDetail.php?lang=en&programName=ustun), more powerful userspace tunnel program with firewall. Documentation can be found [here](http://www.lucabert.de/ipv6/index.php?lang=en).
 
 ##What is 6to4
 
