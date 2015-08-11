@@ -5,10 +5,7 @@ Automatically exported from code.google.com/p/tb-tun
 
 TB-TUN is an tiny userspace program to build 6to4/tunnelbroker/ISATAP tunnel for Linux. The host kernel should have ipv6 stack and supports TUN/TAP. Generally the program should run with the root privilege.
 
-Please read
-
-[HOWTO](http://code.google.com/p/tb-tun/wiki/HOWTO)
-[FAQ](http://code.google.com/p/tb-tun/wiki/FAQ)
+Please read [HOWTO](HOWTO.md) and [FAQ](FAQ.md)
 
 Update 2011.6.2
 
