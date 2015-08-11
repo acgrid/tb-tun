@@ -13,6 +13,10 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <netinet/in.h>
+#include <syslog.h>
+#include <stddef.h>
+#define ipaddr_string(x) inet_ntoa(*(struct in_addr *)(&(x) - \
+		offsetof(struct in_addr, s_addr)))
 
 /* compile with 
  * cc -l pthread -Wall -O2 -s -o tb_userspace tb_userspace.c
@@ -44,10 +48,6 @@ int tun_create(char *dev, int flags)
     return fd;
 }
 
-void printip(int ipaddr) {
-	printf("%d.%d.%d.%d", 0x000000ff&ipaddr, (0x0000ff00&ipaddr)>>8, (0x00ff0000&ipaddr)>>16 ,(0xff000000&ipaddr)>>24);
-}//Only for debug
-
 void s2t_thread(void *s2targs) {
 	int sockv6, tun, ret, res, remote_ip, leniphead, tun_mode;
 	unsigned char bufsock[4096];
@@ -60,50 +60,48 @@ void s2t_thread(void *s2targs) {
 	while (1) {
                 res = recv(sockv6, bufsock, sizeof(bufsock), 0);
                 if (res < 0) {
-                        printf("SOCKS ERROR\r\n");
+                        syslog(LOG_ERR, "SOCKS ERROR");
                         continue;
                 }
 		leniphead = 4*(bufsock[0]&0x0f);
 		if (leniphead>60 || leniphead<20) {
-			printf("IPv4 header too long\r\n");
+			syslog(LOG_ERR,
+				"IPv4 header invalid size %d", leniphead);
 			continue;
 		}
 		if (tun_mode==1) {/*Only accept package with source IPv4 addr the same as tunnel server's*/
 			if ( *(int *)(&bufsock[12])!=remote_ip ) {
-				printf("s2t:Drop package from source IPv4 ");
-				printip(*(int *)(&bufsock[12]));
-				printf(" not the relay server");
-				printip(remote_ip);
-				printf("\r\n");
+				syslog(LOG_DEBUG, "s2t:Drop package from source IPv4 %s not the relay server %s",
+					ipaddr_string(bufsock[12]),
+					ipaddr_string(remote_ip));
 				continue;
 			}
 		}
 		else if (tun_mode==2) {/*In ISATAP mode, we should accept package (IPv6)prefix:0:5efe:xx.xx.xx.xx in (IPv4)xx.xx.xx.xx*/
 			if ( ( *(int *)(&bufsock[12])!=remote_ip ) && (( *(int *)(&bufsock[(leniphead+16)])!=0xfe5e0000) || ( *(int *)(&bufsock[12])!=*(int *)(&bufsock[leniphead+20])) ) ) {
-				printf("s2t:Drop package from source IPv4 ");
-				printip(*(int *)(&bufsock[12]));
-				printf(" do not corresponds its IPv6 address.\r\n");
+				syslog(LOG_DEBUG, "s2t:Drop package from source IPv4 %s which does not correspond to its IPv6 address.",
+					ipaddr_string(bufsock[12]));
 				continue;
 			}
 		}
 		else if ((tun_mode==0) && ( *(int *)(&bufsock[12])!=remote_ip) ) {/*In 6to4 mode, (IPv6)2002:xxxx:xxxx::/48 in (IPv4)xx.xx.xx.xx should be accepted*/
 			if ( *(short *)(&bufsock[(leniphead+8)])!=0x0220) {
-				printf("s2t:Drop package from source IPv4 ");
-                                printip(*(int *)(&bufsock[12]));
-                                printf(" do not corresponds its IPv6 address.\r\n");
+				syslog(LOG_DEBUG, "s2t:Drop package from source IPv4 %s which does not correspond to its IPv6 address.",
+					ipaddr_string(bufsock[12]));
 				continue;
 			}
 			else if( (*(int *)(&bufsock[12]))!=(*(int *)(&bufsock[(leniphead+10)]))) {
-				printf("s2t:Drop package from source IPv4 ");
-                                printip(*(int *)(&bufsock[12]));
-                                printf(" do not corresponds its IPv6 address.\r\n");
+				syslog(LOG_DEBUG, "s2t:Drop package from source IPv4 %s which does not correspond to its IPv6 address.",
+					ipaddr_string(bufsock[12]));
 				continue;
 			}
 		}
+		else syslog(LOG_DEBUG, "s2t:Accepting packet from source IPv4 %s",
+			ipaddr_string(bufsock[12]));
 		ret = res - leniphead;
 		memcpy(&bufsock[leniphead-sizeof(struct tun_pi)], &pi, sizeof(struct tun_pi));
 		ret = write(tun, &bufsock[leniphead-sizeof(struct tun_pi)], ret + sizeof(struct tun_pi));
-                printf("s2t: %d/%d bytes\r\n", res, ret);
+                syslog(LOG_DEBUG, "s2t: %d/%d bytes", res, ret);
 	}
 }
 
@@ -121,7 +119,7 @@ void t2s_thread(void *t2sargs) {
 	while (1) {
 		ret = read(tun, buftun, sizeof(buftun) );
 		if (ret < 0) {
-			printf("t2sTUN ERROR\r\n");
+			syslog(LOG_DEBUG, "t2sTUN ERROR");
 			continue;
 		}
 		remoteaddr.sin_addr.s_addr = remote_ip;
@@ -139,17 +137,20 @@ void t2s_thread(void *t2sargs) {
 				break;
 		}
 		res = sendto(sockv6, &buftun[sizeof(struct tun_pi)], ret, 0 ,(struct sockaddr *)&remoteaddr, sizeof(struct sockaddr));
-		printf("t2s: %d/%d bytes\r\n", ret ,res);
+		syslog(LOG_DEBUG, "t2s: %d/%d bytes", ret ,res);
 	}
 }
 
 int main(int argc, char  *argv[])
 {
-        int tun, rets2t, rett2s;
+        int tun;
         in_addr_t remote_ip;
         char tun_name[IFNAMSIZ];
-	if (argc!=5) {
-		printf("Useage:%s tun_name remote_ipv4 local_ipv4 mode\r\n",argv[0]);
+	openlog("tb_userspace", 0, LOG_DAEMON);
+	if (argc != 5) {
+		fprintf(stderr,
+			"Usage: %s tun_name remote_ipv4 local_ipv4 mode\r\n",
+		       	argv[0]);
 		return 1;
 	}
         strcpy(tun_name, argv[1]);
@@ -158,14 +159,14 @@ int main(int argc, char  *argv[])
                 perror("tun_create");
                 return 1;
         }
-        printf("TUN name is %s\n", tun_name);
+        fprintf(stderr, "TUN name is %s\r\n", tun_name);
 	int sockv6, if_bind, tun_mode;
 	sockv6 = socket(AF_INET, SOCK_RAW, IPPROTO_IPV6);
 	if (sockv6 < 0) {
 		perror("v4_socket_create");
 		return 1;
 	}
-	printf("IPv4 SOCK_RAW created: %d\r\n", sockv6);
+	fprintf(stderr, "IPv4 SOCK_RAW created: %d\r\n", sockv6);
 	struct sockaddr_in localaddr;
 	localaddr.sin_family = AF_INET;
         localaddr.sin_port = htons(IPPROTO_IPV6);
@@ -177,11 +178,9 @@ int main(int argc, char  *argv[])
 			perror("bind local address");
 			return 1;
 		}
-		printf("Bind local IPv4 address ");
-		printip(localaddr.sin_addr.s_addr);
-		printf("\r\n");
+		fprintf(stderr, "Bind local IPv4 address %s\r\n", ipaddr_string(localaddr.sin_addr.s_addr));
 	}/*If local_ipv4(argv[3]) is "any", do not bind local IPv4 address*/
-	else printf("Do not bind local IPv4 address, using default.\r\n");
+	else fprintf(stderr, "Do not bind local IPv4 address, using default.\r\n");
 	pthread_t ids2t, idt2s;
 	struct Threadargs s2targs, t2sargs;
 	s2targs.sockv6 = sockv6;
@@ -201,26 +200,24 @@ int main(int argc, char  *argv[])
 		tun_mode = 2;
 	}
 	else {
-		printf("tunnel mode %s not found.\r\n", argv[4]);
+		fprintf(stderr, "tunnel mode %s not found.\r\n", argv[4]);
 		return 1;
 	}
 	s2targs.tun_mode = tun_mode;
         if (remote_ip == INADDR_NONE) {
-                printf("Bad remote ipv4 address.\r\n");
+                fprintf(stderr, "Bad remote ipv4 address.\r\n");
                 return 1;
         }
 	else {
 		t2sargs.remote_ip = remote_ip;
 		s2targs.remote_ip = remote_ip;
 	}
-        printf("Using remote IPv4 ");
-	printip(remote_ip);
-	printf("\r\n");
-	rets2t = pthread_create(&ids2t, NULL, (void *)s2t_thread, (void *)&s2targs);
+        fprintf(stderr, "Using remote IPv4 %s\r\n", ipaddr_string(remote_ip));
+	pthread_create(&ids2t, NULL, (void *)s2t_thread, (void *)&s2targs);
 	t2sargs.sockv6 = sockv6;
 	t2sargs.tun = tun;
 	t2sargs.tun_mode = tun_mode;
-        rett2s = pthread_create(&idt2s, NULL, (void *)t2s_thread, (void *)&t2sargs);
+        pthread_create(&idt2s, NULL, (void *)t2s_thread, (void *)&t2sargs);
 	pthread_join(ids2t, NULL);
 	pthread_join(idt2s, NULL);
         return 0;
