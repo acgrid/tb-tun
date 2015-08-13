@@ -78,14 +78,14 @@ void s2t_thread(void *s2targs) {
 			}
 		}
 		else if (tun_mode==2) {/*In ISATAP mode, we should accept package (IPv6)prefix:0:5efe:xx.xx.xx.xx in (IPv4)xx.xx.xx.xx*/
-			if ( ( *(int *)(&bufsock[12])!=remote_ip ) && (( *(int *)(&bufsock[(leniphead+16)])!=0xfe5e0000) || ( *(int *)(&bufsock[12])!=*(int *)(&bufsock[leniphead+20])) ) ) {
+			if ( ( *(int *)(&bufsock[12])!=remote_ip ) && (( *(int *)(&bufsock[(leniphead+16)])!=ntohl(0x00005efe)) || ( *(int *)(&bufsock[12])!=*(int *)(&bufsock[leniphead+20])) ) ) {
 				syslog(LOG_DEBUG, "s2t:Drop package from source IPv4 %s which does not correspond to its IPv6 address.",
 					ipaddr_string(bufsock[12]));
 				continue;
 			}
 		}
 		else if ((tun_mode==0) && ( *(int *)(&bufsock[12])!=remote_ip) ) {/*In 6to4 mode, (IPv6)2002:xxxx:xxxx::/48 in (IPv4)xx.xx.xx.xx should be accepted*/
-			if ( *(short *)(&bufsock[(leniphead+8)])!=0x0220) {
+			if (*(short *)(&bufsock[(leniphead+8)])!=ntohs(0x2002)) {
 				syslog(LOG_DEBUG, "s2t:Drop package from source IPv4 %s which does not correspond to its IPv6 address.",
 					ipaddr_string(bufsock[12]));
 				continue;
@@ -125,13 +125,16 @@ void t2s_thread(void *t2sargs) {
 		remoteaddr.sin_addr.s_addr = remote_ip;
 		switch (tun_mode) {
 			case 0:
-				if (*(short *)(&buftun[(sizeof(struct tun_pi)+24)])==0x0220) {
+				if (*(short *)(&buftun[(sizeof(struct tun_pi)+24)])==ntohs(0x2002)) {
 					remoteaddr.sin_addr.s_addr = *(int *)(&buftun[(sizeof(struct tun_pi)+26)]);
 				}/*send package directly to (IPv4)xx.xx.xx.xx other than default gw 192.88.99.1 when handing (IPv6)2002:xxxx:xxxx::/48 package*/
 				break;
 			case 1: break;
 			case 2:
-				if ( (*(int *)(&buftun[(sizeof(struct tun_pi)+24)])==*(int *)(&buftun[(sizeof(struct tun_pi)+8)])) && (*(int *)(&buftun[(sizeof(struct tun_pi)+28)])==*(int *)(&buftun[(sizeof(struct tun_pi)+12)])) && (*(int *)(&buftun[(sizeof(struct tun_pi)+32)])==*(int *)(&buftun[(sizeof(struct tun_pi)+16)])) && (*(int *)(&buftun[(sizeof(struct tun_pi)+16)])==0xfe5e0000)) {
+				if ( (*(int *)(&buftun[(sizeof(struct tun_pi)+24)])==*(int *)(&buftun[(sizeof(struct tun_pi)+8)])) &&
+					(*(int *)(&buftun[(sizeof(struct tun_pi)+28)])==*(int *)(&buftun[(sizeof(struct tun_pi)+12)])) &&
+					(*(int *)(&buftun[(sizeof(struct tun_pi)+32)])==*(int *)(&buftun[(sizeof(struct tun_pi)+16)])) &&
+					(*(int *)(&buftun[(sizeof(struct tun_pi)+16)])==ntohl(0x00005efe))) {
 					remoteaddr.sin_addr.s_addr = *(int *)(&buftun[(sizeof(struct tun_pi)+36)]);
 				}/*In ISATAP mode, IPv6 packages to /64 neighbours are send directly to their IPv4 address without relay*/
 				break;
