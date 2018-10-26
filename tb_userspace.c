@@ -149,6 +149,7 @@ int main(int argc, char  *argv[])
         int tun;
         in_addr_t remote_ip;
         char tun_name[IFNAMSIZ];
+	setlogmask(LOG_UPTO(LOG_NOTICE));
 	openlog("tb_userspace", 0, LOG_DAEMON);
 	if (argc != 5) {
 		fprintf(stderr,
